@@ -1,29 +1,70 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Chat to Cortex</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Recommended CDN for the Extensions API -->
+  <meta charset="utf-8">
+  <title>Chat with Cortex</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <script src="https://extensions.tableauusercontent.com/resources/tableau.extensions.1.latest.min.js"></script>
-  <!-- (Alternative works too) https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js -->
   <style>
-    body { font-family: system-ui, sans-serif; margin: 12px; }
-    #q { width: 100%; padding: 10px; font-size: 14px; }
-    #send { margin-top: 8px; padding: 8px 12px; font-size: 14px; }
-    #status { color:#666; font-size: 12px; margin-top:6px; }
-    #answer { margin-top: 12px; padding: 10px; border: 1px solid #ddd; min-height: 80px; white-space: pre-wrap; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f9;
+      color: #333;
+      padding: 16px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-bottom: 16px;
+      font-size: 1.5em;
+      color: #1f4f8b;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #1f4f8b;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #123970;
+    }
+    #answer {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 4px;
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+    .status {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    /* Apply workbook formatting if available */
+    .tableau-worksheet-title { font-size: 1.4em; color: inherit; }
   </style>
 </head>
 <body>
-  <h3>Ask Snowflake Cortex</h3>
-  <input id="q" placeholder="Type your question…" />
-  <button id="send">Send</button>
-
-  <div id="status">Waiting for Tableau Extensions API…</div>
-  <div id="answer">Answer will appear here.</div>
-
-  <!-- Load your logic AFTER the API -->
-  <script src="./app.js"></script>
+  <div class="container">
+    <h2 class="tableau-worksheet-title">Ask Cortex Analyst</h2>
+    <div class="status" id="status">Initializing...</div>
+    <input id="q" placeholder="Type your question..." />
+    <button id="send">Send</button>
+    <div id="answer">Answer will appear here</div>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>
