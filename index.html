@@ -6,35 +6,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <script src="https://extensions.tableauusercontent.com/resources/tableau.extensions.1.latest.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px;}
-    .card { background: #fff; padding: 16px; margin: 12px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
-    .row { display: flex; gap: 8px; align-items: center;}
-    input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
-    button { padding: 10px 16px; background: #005fbf; color: white; border: none; border-radius: 4px; cursor: pointer;}
-    button:disabled { opacity: 0.6; cursor: not-allowed;}
-    .status { color: #666; margin-top: 8px; }
-    .answer { margin-top: 12px; white-space: pre-wrap; }
-    .badge { display: inline-block; background: #e7f3ff; color: #005fbf; padding: 4px 8px; border-radius: 4px; margin-right: 6px; font-size: 0.9em; }
-    .warn { color: #9a3412; background: #fff7ed; padding: 8px; border-radius: 4px; margin-top: 12px;}
+    body { font-family: Arial, sans-serif; background:#f6f7fb; margin:0; padding:20px; }
+    .card { background:#fff; padding:16px; margin:12px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,.1); }
+    .row { display:flex; gap:8px; }
+    input[type="text"] { flex:1; padding:10px; border:1px solid #ccc; border-radius:4px; }
+    button { padding:10px 16px; background:#005fbf; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+    .status { color:#666; margin-top:8px; }
+    .badge { display:inline-block; background:#e7f3ff; color:#005fbf; padding:4px 8px; border-radius:4px; margin-right:6px; font-size:0.9em; }
+    pre { background:#f9f9f9; padding:10px; border-radius:6px; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
+    th { background:#f2f2f2; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="row">
-      <input id="q" placeholder="Type your question..."/>
+      <input id="q" placeholder="Enter your question..."/>
       <button id="send">Send</button>
     </div>
-    <div id="status" class="status">Loading…</div>
+    <div id="status" class="status">Initializing…</div>
   </div>
 
   <div class="card" id="result-card" style="display:none;">
     <div id="badges"></div>
-    <div class="answer" id="answer-text"></div>
-    <div id="sql-card" style="display:none; margin-top:10px;">
-      <strong>SQL:</strong>
+    <div id="answer-text" style="margin-top:12px;"></div>
+
+    <div id="sql-card" style="display:none; margin-top:12px;">
+      <strong>Generated SQL:</strong>
       <pre id="sql-text"></pre>
     </div>
-    <div id="warning" class="warn" style="display:none;"></div>
+
+    <div id="table-card" style="display:none; margin-top:12px;">
+      <strong>Results:</strong>
+      <div id="table-container"></div>
+    </div>
   </div>
 
   <script src="app.js"></script>
