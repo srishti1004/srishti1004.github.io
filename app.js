@@ -1,6 +1,6 @@
 // === CHANGE THESE TWO CONSTANTS ===
 const FN_URL = "https://wonderful-kringle-00fe67.netlify.app/.netlify/functions/query";
-const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.SALES_SV";
+const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS";
 
 const $ = (id) => document.getElementById(id);
 const setStatus = (t) => $("status").textContent = t;
