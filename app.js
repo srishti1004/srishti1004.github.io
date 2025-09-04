@@ -1,7 +1,7 @@
 // === FILL THESE IN ===
-const ENDPOINT = "https://<account>.<region>.snowflakecomputing.com/api/v2/cortex/analyst/message";
-const BEARER   = "Bearer <YOUR_ACCESS_TOKEN>";   // demo only
-const SEMANTIC_VIEW = "APP_DB.ANALYTICS.SALES_SV"; // your FQN
+const ENDPOINT = "https://zjiangd-es06588.snowflakecomputing.com/api/v2/cortex/analyst/message";
+const BEARER   = "Bearer eyJraWQiOiI1MDIyMjc2ODEzMyIsImFsZyI6IkVTMjU2In0.eyJwIjoiMTk2MTgyNTMyOjE5NjE4MjUzNiIsImlzcyI6IlNGOjIwMTgiLCJleHAiOjE3ODg1NDI4Mzl9.y9YOYb_R1nQDKEf0hYXTk0KszCzNV1gqHz7yhgXwkwz97ymxwDkbo-qh-sCjUlM1zEqkggf_JjmeFluwMqegEQ";   // demo only
+const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS"; // your FQN
 
 async function tableauFiltersAsObject(dashboard) {
   const out = {};
