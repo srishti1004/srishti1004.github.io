@@ -44,6 +44,15 @@ async function sendRequest(question, filters = {}) {
   let dashboard;
   try {
     await tableau.extensions.initializeAsync();
+    const dashboard = tableau.extensions.dashboardContent.dashboard;
+    
+    dashboard.addEventListener(
+      tableau.TableauEventType.FilterChanged,
+      async (filterEvent) => {
+        await showFilters(dashboard);
+        setStatus("Filters updated.");
+      }
+    );
     setStatus("Ready using Tableau filters.");
     dashboard = tableau.extensions.dashboardContent.dashboard;
   } catch {
