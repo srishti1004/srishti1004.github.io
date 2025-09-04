@@ -5,6 +5,32 @@ const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS";
 const $ = id => document.getElementById(id);
 const setStatus = t => $("status").textContent = t;
 
+
+// === new: show filters in the UI ===
+async function showFilters(dashboard) {
+  if (!dashboard) {
+    $("filters-display").textContent = "Filters: (not in Tableau)";
+    return;
+  }
+
+  let allFilters = [];
+  for (const ws of dashboard.worksheets) {
+    try {
+      const fs = await ws.getFiltersAsync();
+      fs.forEach(f => {
+        if (f.filterType === "categorical") {
+          const vals = f.appliedValues.map(v => v.formattedValue ?? v.value).join(", ");
+          allFilters.push(`${f.fieldName}: [${vals}]`);
+        }
+      });
+    } catch {}
+  }
+
+  $("filters-display").textContent = allFilters.length
+    ? "Filters: " + allFilters.join(" | ")
+    : "Filters: (none applied)";
+}
+
 async function sendRequest(question, filters = {}) {
   const res = await fetch(FN_URL, {
     method: "POST",
