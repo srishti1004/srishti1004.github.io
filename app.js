@@ -1,6 +1,7 @@
 // === FILL THESE IN ===
 const ENDPOINT = "https://zjiangd-es06588.snowflakecomputing.com/api/v2/cortex/analyst/message";
-const BEARER   = "Bearer eyJraWQiOiI1MDIyMjc2ODEzMyIsImFsZyI6IkVTMjU2In0.eyJwIjoiMTk2MTgyNTMyOjE5NjE4MjUzNiIsImlzcyI6IlNGOjIwMTgiLCJleHAiOjE3ODg1NDI4Mzl9.y9YOYb_R1nQDKEf0hYXTk0KszCzNV1gqHz7yhgXwkwz97ymxwDkbo-qh-sCjUlM1zEqkggf_JjmeFluwMqegEQ";   // demo only
+const token = process.env.SNOWFLAKE_PAT;  // correct retrieval
+const BEARER = `Bearer ${token}`;         // correct interpolation
 const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS"; // your FQN
 // ----- helpers -----
 const $ = (id) => document.getElementById(id);
