@@ -30,7 +30,7 @@
       const res = await fetch("https://wonderful-kringle-00fe67.netlify.app/.netlify/functions/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, filters, semantic_view: "APP_DB.ANALYTICS.SALES_SV" })
+        body: JSON.stringify({ question, filters, semantic_view: "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS" })
       });
       const data = await res.json();
       setAnswer(data.answer || "No answer returned");
