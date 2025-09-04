@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Chat to Cortex</title>
+  <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 12px; }
+    #a { margin-top: 10px; padding: 8px; border: 1px solid #ddd; min-height: 64px; white-space: pre-wrap; }
+    input, button { font-size: 14px; }
+    #q { width: 100%; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h3>Ask Snowflake Cortex</h3>
+  <input id="q" placeholder="Type your question…" />
+  <button id="send">Send</button>
+  <div id="a">Answer will appear here.</div>
+  <script src="./app.js"></script>
+</body>
+</html>
