@@ -6,31 +6,31 @@ const $ = id => document.getElementById(id);
 const setStatus = t => $("status").textContent = t;
 
 
-// === new: show filters in the UI ===
 async function showFilters(dashboard) {
+  const display = $("filters-display");
   if (!dashboard) {
-    $("filters-display").textContent = "Filters: (not in Tableau)";
+    display.textContent = "Filters: (not in Tableau)";
     return;
   }
 
-  let allFilters = [];
-  for (const ws of dashboard.worksheets) {
-    try {
-      const fs = await ws.getFiltersAsync();
-      fs.forEach(f => {
-        if (f.filterType === "categorical") {
-          const vals = f.appliedValues.map(v => v.formattedValue ?? v.value).join(", ");
-          allFilters.push(`${f.fieldName}: [${vals}]`);
-        }
-      });
-    } catch {}
+  try {
+    const filters = await dashboard.getFiltersAsync() || [];
+    const catFilters = filters.filter(f => f.filterType === tableau.FilterType.Categorical);
+    if (!catFilters.length) {
+      display.textContent = "Filters: (none applied)";
+      return;
+    }
+
+    const lines = catFilters.map(f => {
+      const vals = f.appliedValues.map(v => v.formattedValue ?? v.value).join(", ");
+      return `${f.fieldName}: [${vals}]`;
+    });
+    display.textContent = "Filters: " + lines.join(" | ");
+  } catch (err) {
+    display.textContent = "Filters: (error retrieving)";
+    console.error(err);
   }
-
-  $("filters-display").textContent = allFilters.length
-    ? "Filters: " + allFilters.join(" | ")
-    : "Filters: (none applied)";
 }
-
 async function sendRequest(question, filters = {}) {
   const res = await fetch(FN_URL, {
     method: "POST",
