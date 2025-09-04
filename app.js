@@ -27,7 +27,7 @@
 
     setStatus("Sending to proxy...");
     try {
-      const res = await fetch("https://<your-middleware-site>.netlify.app/.netlify/functions/query", {
+      const res = await fetch("https://wonderful-kringle-00fe67.netlify.app/.netlify/functions/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, filters, semantic_view: "APP_DB.ANALYTICS.SALES_SV" })
