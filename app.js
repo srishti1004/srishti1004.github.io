@@ -33,7 +33,7 @@
         body: JSON.stringify({ question, filters, semantic_view: "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS" })
       });
       const data = await res.json();
-      setAnswer(data.answer || "No answer returned");
+      setAnswer(data.content.text || "No answer returned");
       setStatus("Done.");
     } catch (err) {
       setAnswer("Error: " + err);
