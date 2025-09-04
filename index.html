@@ -4,112 +4,41 @@
   <meta charset="utf-8"/>
   <title>Ask Cortex Analyst</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
-  <!-- Tableau Extensions API (loads when running inside Tableau) -->
   <script src="https://extensions.tableauusercontent.com/resources/tableau.extensions.1.latest.min.js"></script>
-
   <style>
-    :root {
-      --bg: #f6f7fb;
-      --card: #ffffff;
-      --text: #28323c;
-      --muted: #6b7280;
-      --brand: #1f4f8b;
-      --brand-600: #123970;
-      --accent: #EEF2FF;
-      --warning-bg: #fff7ed;
-      --warning-border: #fdba74;
-      --chip: #eef2f7;
-      --success: #10b981;
-      --danger: #ef4444;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 16px; background: var(--bg); color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    .container {
-      max-width: 860px; margin: 0 auto; display: grid; gap: 16px;
-    }
-    .card {
-      background: var(--card); border-radius: 12px; padding: 16px;
-      box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.06);
-    }
-    h1 { font-size: 1.4rem; margin: 0 0 8px; color: var(--brand); }
-    .row { display: grid; gap: 12px; grid-template-columns: 1fr auto; align-items: start; }
-    .row .grow { grid-column: 1 / -1; }
-    input[type="text"], textarea {
-      width: 100%; padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 10px;
-      outline: none; background: #fff; font-size: 0.98rem;
-    }
-    button {
-      background: var(--brand); color: #fff; border: none; border-radius: 10px;
-      padding: 10px 14px; font-weight: 600; cursor: pointer; transition: background .2s;
-    }
-    button:disabled { opacity: .7; cursor: not-allowed; }
-    button:hover { background: var(--brand-600); }
-
-    .status { color: var(--muted); font-size: .9rem; }
-    .answer { white-space: pre-wrap; line-height: 1.55; }
-    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .chip {
-      background: var(--chip); color: var(--text); border: 1px solid #e5e7eb;
-      padding: 6px 10px; border-radius: 999px; font-size: .85rem; cursor: pointer;
-    }
-    .chip:hover { background: #e6edf5; }
-
-    .badges { display:flex; gap:8px; flex-wrap:wrap; margin-top: 8px; }
-    .badge {
-      background: var(--accent); color: var(--brand); border: 1px solid #dbeafe;
-      padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600;
-    }
-    .warn {
-      background: var(--warning-bg); border: 1px solid var(--warning-border);
-      color: #9a3412; padding: 10px 12px; border-radius: 10px; font-size: .92rem;
-    }
-    details {
-      background: #fafbfd; border: 1px solid #e5e7eb; border-radius: 10px;
-      padding: 10px 12px;
-    }
-    summary { cursor: pointer; font-weight: 600; }
-    .meta-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 8px; }
-    .muted { color: var(--muted); }
-    .divider { height: 1px; background:#e5e7eb; margin: 12px 0; }
-    .footer-note { font-size: .82rem; color: var(--muted); text-align: right; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px;}
+    .card { background: #fff; padding: 16px; margin: 12px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    .row { display: flex; gap: 8px; align-items: center;}
+    input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;}
+    button { padding: 10px 16px; background: #005fbf; color: white; border: none; border-radius: 4px; cursor: pointer;}
+    button:disabled { opacity: 0.6; cursor: not-allowed;}
+    .status { color: #666; margin-top: 8px; }
+    .answer { margin-top: 12px; white-space: pre-wrap; }
+    .badge { display: inline-block; background: #e7f3ff; color: #005fbf; padding: 4px 8px; border-radius: 4px; margin-right: 6px; font-size: 0.9em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f7f7f7; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Input -->
-    <div class="card">
-      <h1>Ask Cortex Analyst</h1>
-      <div class="row">
-        <input id="q" type="text" placeholder="e.g., Show total quantity in stock and reorder levels for 2025"/>
-        <button id="send">Send</button>
-        <div id="status" class="status grow">Initializing…</div>
-      </div>
+  <div class="card">
+    <div class="row">
+      <input id="q" placeholder="Enter your question..." />
+      <button id="send">Send</button>
     </div>
+    <div id="status" class="status">Loading…</div>
+  </div>
 
-    <!-- Answer -->
-    <div class="card">
-      <div class="answer" id="answer">Ask a question to see the response here.</div>
-      <div id="suggestions" class="chips" aria-label="Suggestions"></div>
-      <div id="badges" class="badges" aria-label="Metadata"></div>
+  <div class="card" id="result-card" style="display:none;">
+    <div id="badges"></div>
+    <div class="answer" id="answer-text"></div>
+    <div id="sql-card" style="display:none; margin-top:12px;">
+      <strong>Generated SQL:</strong>
+      <pre id="sql-text"></pre>
     </div>
-
-    <!-- Warnings -->
-    <div id="warnings-card" class="card" style="display:none;">
-      <div class="warn" id="warnings"></div>
-    </div>
-
-    <!-- Evidence / Retrieval -->
-    <div id="evidence-card" class="card" style="display:none;">
-      <h2 style="margin:0 0 8px;">Supporting Retrieval</h2>
-      <div id="evidence-list" class="meta-grid"></div>
-    </div>
-
-    <div class="footer-note">
-      Tip: click a suggestion chip to auto-fill and resend your question.
+    <div id="table-card" style="display:none; margin-top:12px;">
+      <strong>Results:</strong>
+      <div id="table-container"></div>
     </div>
   </div>
 
