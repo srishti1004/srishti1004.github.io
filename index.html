@@ -1,32 +1,29 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <title>Chat to Cortex</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Load the Tableau Extensions API FIRST -->
-  <script src="https://tableau.github.io/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+  <!-- Recommended CDN for the Extensions API -->
+  <script src="https://extensions.tableauusercontent.com/resources/tableau.extensions.1.latest.min.js"></script>
+  <!-- (Alternative works too) https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js -->
   <style>
     body { font-family: system-ui, sans-serif; margin: 12px; }
-    #container { max-width: 640px; }
     #q { width: 100%; padding: 10px; font-size: 14px; }
     #send { margin-top: 8px; padding: 8px 12px; font-size: 14px; }
-    #answer { margin-top: 12px; padding: 10px; border: 1px solid #ddd; min-height: 80px; white-space: pre-wrap; }
     #status { color:#666; font-size: 12px; margin-top:6px; }
-    code { background:#f7f7f7; padding:2px 4px; border:1px solid #eee; }
+    #answer { margin-top: 12px; padding: 10px; border: 1px solid #ddd; min-height: 80px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <div id="container">
-    <h3>Ask Snowflake Cortex</h3>
-    <input id="q" placeholder="Type your question…" />
-    <button id="send">Send</button>
+  <h3>Ask Snowflake Cortex</h3>
+  <input id="q" placeholder="Type your question…" />
+  <button id="send">Send</button>
 
-    <div id="status">Waiting for Tableau Extensions API…</div>
-    <div id="answer">Answer will appear here.</div>
-  </div>
+  <div id="status">Waiting for Tableau Extensions API…</div>
+  <div id="answer">Answer will appear here.</div>
 
-  <!-- Your logic LAST (after the API is loaded) -->
+  <!-- Load your logic AFTER the API -->
   <script src="./app.js"></script>
 </body>
 </html>
