@@ -16,6 +16,7 @@ async function showFilters(dashboard) {
   try {
     const filters = await dashboard.getFiltersAsync() || [];
     const catFilters = filters.filter(f => f.filterType === tableau.FilterType.Categorical);
+    console.log(filters);
     if (!catFilters.length) {
       display.textContent = "Filters: (none applied)";
       return;
