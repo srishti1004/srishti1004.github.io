@@ -30,7 +30,7 @@ async function sendRequest(question, filters = {}) {
     $("send").disabled = true;
     setStatus("Running...");
 
-    // Collect filters if in Tableau
+    // Collect filters if inside Tableau
     let filters = {};
     if (dashboard) {
       for (const ws of dashboard.worksheets) {
@@ -50,23 +50,24 @@ async function sendRequest(question, filters = {}) {
       setStatus("Done.");
       $("result-card").style.display = "";
 
-      // Badges
+      // === badges ===
       $("badges").innerHTML = `
         <span class="badge">Model: ${data.response_metadata?.model_names?.join(", ") ?? "–"}</span>
         <span class="badge">${data.response_metadata?.is_semantic_sql ? "Semantic SQL" : "Freeform"}</span>
         <span class="badge">Latency: ${data.response_metadata?.analyst_latency_ms ?? "–"} ms</span>
       `;
 
-      // Answer text
+      // === answer text ===
       const msg = data.message;
       const textPiece = Array.isArray(msg?.content)
         ? msg.content.find(c => c.type === "text")?.text
         : "";
       $("answer-text").textContent = textPiece || "No answer returned.";
 
-      // SQL
+      // === SQL ===
       const sqlPiece = Array.isArray(msg?.content)
-        ? msg.content.find(c => c.type === "sql")?.text || msg.content.find(c => c.type === "sql")?.statement
+        ? msg.content.find(c => c.type === "sql")?.statement ||
+          msg.content.find(c => c.type === "sql")?.text
         : "";
       if (sqlPiece) {
         $("sql-text").textContent = sqlPiece;
@@ -75,14 +76,15 @@ async function sendRequest(question, filters = {}) {
         $("sql-card").style.display = "none";
       }
 
-      // Table results (if API returns a data array)
-      if (Array.isArray(data.data) && data.data.length > 0) {
-        const cols = Object.keys(data.data[0]);
+      // === Results table (from middleware) ===
+      // middleware should attach executed rows under `query_results`
+      if (Array.isArray(data.query_results) && data.query_results.length > 0) {
+        const cols = Object.keys(data.query_results[0]);
         const table = document.createElement("table");
         const thead = table.createTHead().insertRow();
         cols.forEach(c => thead.insertCell().textContent = c);
         const tbody = table.createTBody();
-        data.data.forEach(row => {
+        data.query_results.forEach(row => {
           const tr = tbody.insertRow();
           cols.forEach(c => tr.insertCell().textContent = row[c] ?? "");
         });
