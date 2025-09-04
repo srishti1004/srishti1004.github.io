@@ -2,143 +2,97 @@
 const ENDPOINT = "https://zjiangd-es06588.snowflakecomputing.com/api/v2/cortex/analyst/message";
 const BEARER   = "Bearer eyJraWQiOiI1MDIyMjc2ODEzMyIsImFsZyI6IkVTMjU2In0.eyJwIjoiMTk2MTgyNTMyOjE5NjE4MjUzNiIsImlzcyI6IlNGOjIwMTgiLCJleHAiOjE3ODg1NDI4Mzl9.y9YOYb_R1nQDKEf0hYXTk0KszCzNV1gqHz7yhgXwkwz97ymxwDkbo-qh-sCjUlM1zEqkggf_JjmeFluwMqegEQ";   // demo only
 const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS"; // your FQN
-// ===== FILL THESE IN (DEMO ONLY; tokens in client are risky) =====
-
-// ===== Small helpers =====
+// ----- helpers -----
 const $ = (id) => document.getElementById(id);
-const setStatus = (msg) => { $("status").textContent = msg; };
-const setAnswer = (msg) => { $("answer").textContent = msg; };
+const setStatus = (m) => $("status").textContent = m;
+const setAnswer = (m) => $("answer").textContent = m;
 
-// Wait for the Extensions API to exist, then initialize
 async function waitForTableauApi(timeoutMs = 8000) {
   const start = Date.now();
   while (typeof window.tableau === "undefined") {
     await new Promise(r => setTimeout(r, 100));
-    if (Date.now() - start > timeoutMs) throw new Error("Tableau Extensions API not found.");
+    if (Date.now() - start > timeoutMs) throw new Error("Extensions API not found");
   }
 }
 
 async function initTableau() {
-  // Initialize Tableau Extensions API only inside a Tableau dashboard
-  await tableau.extensions.initializeAsync();
+  // Must run INSIDE a Tableau dashboard extension iframe
+  // If you open index.html directly, this will fail (by design).
+  await tableau.extensions.initializeAsync(); // create the extension context
   return tableau.extensions.dashboardContent.dashboard;
 }
 
-// Collect filters from all worksheets as { fieldName: [values] }
-async function collectDashboardFilters(dashboard) {
+async function collectFilters(dashboard) {
   const out = {};
-  const sheets = dashboard.worksheets || [];
-  for (const ws of sheets) {
+  for (const ws of (dashboard.worksheets || [])) {
     let filters = [];
     try { filters = await ws.getFiltersAsync(); } catch { /* ignore */ }
     for (const f of filters) {
       const key = f.fieldName || f.caption || "filter";
       if (!out[key]) out[key] = [];
-
-      switch (f.filterType) {
-        case "categorical": {
-          const vals = (f.appliedValues || []).map(v => v.formattedValue ?? v.value);
-          out[key] = Array.from(new Set(out[key].concat(vals)));
-          break;
-        }
-        case "range": {
-          out[key] = [{
-            min: f.minValue ?? null,
-            max: f.maxValue ?? null,
-            includeNull: !!f.includeNullValues
-          }];
-          break;
-        }
-        case "relative-date": {
-          out[key] = [{ period: f.periodType, rangeType: f.rangeType }];
-          break;
-        }
-        default: {
-          // Unsupported filter type; skip safely
-        }
+      if (f.filterType === "categorical") {
+        const vals = (f.appliedValues || []).map(v => v.formattedValue ?? v.value);
+        out[key] = Array.from(new Set(out[key].concat(vals)));
       }
     }
   }
   return out;
 }
 
-// Call Snowflake Cortex Analyst
-async function callCortex(question, semanticView, filtersObj) {
-  // You can prepend a grounding hint using filters if you want:
-  // const hint = `Use these filters if relevant: ${JSON.stringify(filtersObj)}`;
+async function callCortex(question, semanticView) {
   const body = {
-    messages: [
-      { role: "user", content: [{ type: "text", text: question }] }
-    ],
+    messages: [{ role: "user", content: [{ type: "text", text: question }] }],
     semantic_view: semanticView,
     stream: false
   };
-
   const res = await fetch(ENDPOINT, {
     method: "POST",
-    headers: {
-      "Authorization": BEARER,
-      "Content-Type": "application/json"
-    },
+    headers: { "Authorization": BEARER, "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-
-  // If CORS isn't allowed by Snowflake for your origin, this will throw.
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
-    throw new Error(`Cortex HTTP ${res.status}: ${txt || res.statusText}`);
+    throw new Error(`HTTP ${res.status}: ${txt || res.statusText}`);
   }
-
-  // Analyst responses can vary; try common shapes:
   const data = await res.json();
-  // v1: { message: { content: [ { text: "..." } ] }, sql: {...} }
-  const answerFromV1 = data?.message?.content?.find?.(c => c?.type === "text")?.text;
-  // alt: { answer: "..." }
-  const answerFromAlt = data?.answer;
-  const sqlMaybe = data?.message?.content?.find?.(c => c?.type === "sql")?.statement || data?.sql?.statement;
-
-  return {
-    answer: answerFromV1 || answerFromAlt || JSON.stringify(data, null, 2),
-    sql: sqlMaybe || null,
-    raw: data
-  };
+  const answer = data?.message?.content?.find?.(c => c?.type === "text")?.text
+              || data?.answer
+              || JSON.stringify(data, null, 2);
+  const sql = data?.message?.content?.find?.(c => c?.type === "sql")?.statement
+           || data?.sql?.statement || null;
+  return { answer, sql };
 }
 
-// Wire up the UI once the API is ready and initialized
 (async function boot() {
   try {
-    setStatus("Waiting for Tableau Extensions API…");
-    await waitForTableauApi();
-    setStatus("Initializing Tableau extension…");
-    const dashboard = await initTableau();
+    setStatus("Waiting for Extensions API…");
+    await waitForTableauApi();                    // ensure API script loaded
+    setStatus("Initializing extension…");
+    const dashboard = await initTableau();        // ensure we're inside Tableau
     setStatus("Ready. Type a question and click Send.");
 
-    $("send").addEventListener("click", async () => {
-      const question = $("q").value.trim();
-      if (!question) { setAnswer("Please type a question."); return; }
-
+    document.getElementById("send").addEventListener("click", async () => {
+      const q = $("q").value.trim();
+      if (!q) { setAnswer("Please type a question."); return; }
       setStatus("Collecting filters…");
-      const filters = await collectDashboardFilters(dashboard);
-
-      setStatus("Calling Snowflake Cortex Analyst…");
+      const filters = await collectFilters(dashboard); // you can add them to the prompt if desired
+      setStatus("Calling Cortex Analyst…");
       try {
-        const { answer, sql } = await callCortex(question, SEMANTIC_VIEW, filters);
+        const { answer, sql } = await callCortex(q, SEMANTIC_VIEW);
         setAnswer(answer + (sql ? `\n\n---\nGenerated SQL:\n${sql}` : ""));
         setStatus("Done.");
-      } catch (err) {
-        setAnswer(`❌ Error calling Cortex:\n${(err && err.message) || err}`);
+      } catch (e) {
+        setAnswer("❌ Cortex call failed:\n" + (e?.message || e));
         setStatus("Failed.");
       }
     });
-  } catch (err) {
-    // If you're previewing index.html directly in a browser (NOT inside Tableau),
-    // the Extensions API won't exist; you'll land here.
-    setStatus("Not running inside Tableau (or Extensions API not available).");
+  } catch (e) {
+    // This fires if you opened index.html directly (not inside Tableau), or the API script failed to load.
+    setStatus("Extensions API not available.");
     setAnswer(
-      "Tip: Add this page as a Tableau dashboard extension via your .trex file.\n" +
-      "If you are inside Tableau and still see this, ensure the Extensions API script\n" +
-      "is loading and your extension host is safe-listed in Tableau Cloud."
+      "Open this page as a Tableau Dashboard Extension via your .trex file.\n" +
+      "In Tableau Cloud: Edit dashboard → drag Extension → Open from file → select your .trex\n"
     );
-    console.error(err);
+    console.error(e);
   }
 })();
