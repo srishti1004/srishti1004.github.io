@@ -5,71 +5,101 @@ const SEMANTIC_VIEW = "DEMO_INVENTORY.PUBLIC.INVENTORY_ANALYSIS";
 const $ = id => document.getElementById(id);
 const setStatus = t => $("status").textContent = t;
 
-async function askCortex(q, filters = {}) {
+async function sendRequest(question, filters = {}) {
   const res = await fetch(FN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: q, filters, semantic_view: SEMANTIC_VIEW })
+    body: JSON.stringify({ question, filters, semantic_view: SEMANTIC_VIEW })
   });
   return res.json();
 }
 
 (async () => {
-  let dashboard = null;
+  let dashboard;
   try {
     await tableau.extensions.initializeAsync();
-    setStatus("Ready (Tableau filters enabled)");
+    setStatus("Ready using Tableau filters.");
     dashboard = tableau.extensions.dashboardContent.dashboard;
   } catch {
-    setStatus("Ready (dev mode)");
+    setStatus("Ready (dev mode, no filters).");
   }
 
   $("send").onclick = async () => {
     const q = $("q").value.trim();
-    if (!q) return;
+    if (!q) return alert("Please enter a question.");
     $("send").disabled = true;
-    setStatus("Thinking…");
+    setStatus("Running...");
 
-    const filters = {};
+    // Collect filters if in Tableau
+    let filters = {};
     if (dashboard) {
       for (const ws of dashboard.worksheets) {
-        const fs = await ws.getFiltersAsync().catch(() => []);
-        fs.filter(f => f.filterType === "categorical").forEach(f => {
-          filters[f.fieldName] = f.appliedValues.map(v => v.formattedValue ?? v.value);
-        });
+        try {
+          const fs = await ws.getFiltersAsync();
+          fs.filter(f => f.filterType === "categorical")
+            .forEach(f => {
+              filters[f.fieldName] = f.appliedValues.map(v => v.formattedValue ?? v.value);
+            });
+        } catch {}
       }
     }
 
-    const data = await askCortex(q, filters);
-    $("send").disabled = false;
-    $("result-card").style.display = "";
+    try {
+      const data = await sendRequest(q, filters);
+      $("send").disabled = false;
+      setStatus("Done.");
+      $("result-card").style.display = "";
 
-    const md = data.response_metadata || {};
-    $("badges").innerHTML = `
-      <span class="badge">Model: ${md.model_names ? md.model_names.join(", ") : "–"}</span>
-      <span class="badge">${md.is_semantic_sql ? "Semantic SQL" : "Freeform"}</span>
-      <span class="badge">Latency: ${md.analyst_latency_ms ?? "–"} ms</span>
-    `;
+      // Badges
+      $("badges").innerHTML = `
+        <span class="badge">Model: ${data.response_metadata?.model_names?.join(", ") ?? "–"}</span>
+        <span class="badge">${data.response_metadata?.is_semantic_sql ? "Semantic SQL" : "Freeform"}</span>
+        <span class="badge">Latency: ${data.response_metadata?.analyst_latency_ms ?? "–"} ms</span>
+      `;
 
-    const msg = data.message;
-    const textObj = (msg?.content || []).find(c => c.type === "text");
-    $("answer-text").textContent = textObj?.text || "No answer";
+      // Answer text
+      const msg = data.message;
+      const textPiece = Array.isArray(msg?.content)
+        ? msg.content.find(c => c.type === "text")?.text
+        : "";
+      $("answer-text").textContent = textPiece || "No answer returned.";
 
-    const sqlObj = (msg?.content || []).find(c => c.type === "sql");
-    if (sqlObj) {
-      $("sql-text").textContent = sqlObj.text;
-      $("sql-card").style.display = "";
-    } else {
+      // SQL
+      const sqlPiece = Array.isArray(msg?.content)
+        ? msg.content.find(c => c.type === "sql")?.text || msg.content.find(c => c.type === "sql")?.statement
+        : "";
+      if (sqlPiece) {
+        $("sql-text").textContent = sqlPiece;
+        $("sql-card").style.display = "";
+      } else {
+        $("sql-card").style.display = "none";
+      }
+
+      // Table results (if API returns a data array)
+      if (Array.isArray(data.data) && data.data.length > 0) {
+        const cols = Object.keys(data.data[0]);
+        const table = document.createElement("table");
+        const thead = table.createTHead().insertRow();
+        cols.forEach(c => thead.insertCell().textContent = c);
+        const tbody = table.createTBody();
+        data.data.forEach(row => {
+          const tr = tbody.insertRow();
+          cols.forEach(c => tr.insertCell().textContent = row[c] ?? "");
+        });
+        $("table-container").innerHTML = "";
+        $("table-container").appendChild(table);
+        $("table-card").style.display = "";
+      } else {
+        $("table-card").style.display = "none";
+      }
+
+    } catch (err) {
+      $("send").disabled = false;
+      setStatus("Failed.");
+      $("result-card").style.display = "";
+      $("answer-text").textContent = "❌ " + (err.message || err);
       $("sql-card").style.display = "none";
+      $("table-card").style.display = "none";
     }
-
-    if (data.warnings?.length) {
-      $("warning").style.display = "";
-      $("warning").textContent = data.warnings.map(w => w.message || w).join("\n");
-    } else {
-      $("warning").style.display = "none";
-    }
-
-    setStatus("Done.");
   };
 })();
